@@ -10,3 +10,7 @@
 
 # rspec failure tracking
 .rspec_status
+
+**/.DS_Store
+**/*.swp
+.byebug_history
