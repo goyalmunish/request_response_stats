@@ -34,6 +34,7 @@ end
 # Client libraries
 require 'rest-client'
 require 'httparty'
+require 'savon'
 
 # Enable outbound requests to be capture
 module RestClient
@@ -42,4 +43,22 @@ end
 
 module HTTParty
   include CustomClient
+end
+
+module Savon
+  include CustomClient
+
+  def self.custom_uri_key
+    :wsdl
+  end
+
+  class Client
+    alias_method("#{Savon::RENAME_NAMESPACE}call".to_sym, :call)
+
+    def call(operation_name, locals={}, &block)
+      Savon.log_request_response_stats(operation_name, "locals") do
+        public_send("#{Savon::RENAME_NAMESPACE}call".to_sym, operation_name, locals, &block)
+      end
+    end
+  end
 end
