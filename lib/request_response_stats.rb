@@ -1,9 +1,11 @@
 # File: lib/request_response_stats.rb
 
+# library files
 require "request_response_stats/version"
 require_relative 'request_response_stats/request_response'
 require_relative 'request_response_stats/custom_client'
 require_relative 'request_response_stats/controller_concern'
+require_relative 'request_response_stats/req_res_stat'
 
 module RequestResponseStats
   # override to set it to false if you want to capture inbound requests
@@ -20,11 +22,16 @@ module RequestResponseStats
   end
 end
 
+# TODO: The following files should not be required like this, instead they should be extracted into correct
+# place in Rails project using `rake` command
+# require_relative 'req_res_stat_controller'
+# require_relative 'request_response_stats_config'
+
 ##### Examples: #####
 
 ## Checking current redis data:
 =begin
- require 'request_response_stats'
+ # require 'request_response_stats'
  include RequestResponseStats
  rrs = RequestResponse.new(nil, nil)
  ap rrs.redis_record.hashify_all_data

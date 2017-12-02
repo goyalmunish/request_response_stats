@@ -1,6 +1,9 @@
 # File: app/models/req_res_stat.rb
+# File: lib/request_response_stats/req_res_stat.rb
 
-class ReqResStat
+require 'mongoid'
+
+class RequestResponseStats::ReqResStat
   include Mongoid::Document
   # include Mongoid::Timestamps
 

@@ -1,5 +1,7 @@
 # File: lib/request_response_stats/controller_concern.rb
 
+require_relative 'request_response'
+
 module RequestResponseStats
   module ControllerConcern
     def self.included(base)

@@ -1,5 +1,6 @@
-# File: app/controllers/api/req_res_stat_controller.rb
+# File: app/controllers/req_res_stat_controller.rb
 
+# TODO: This controller is yet to be tested
 class ReqResStatController < ApplicationController
 
   # params[:start_time] format: "2009-06-24 12:39:54 +09:00"

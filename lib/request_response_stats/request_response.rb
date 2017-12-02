@@ -1,6 +1,7 @@
 # File: lib/request_response_stats/request_response.rb
 
 require_relative 'redis_record'
+require_relative 'req_res_stat'
 
 module RequestResponseStats
   class RequestResponse
