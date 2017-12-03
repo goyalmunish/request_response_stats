@@ -55,13 +55,11 @@ class ApplicationController < ActionController::Base
 end
 ```
 
-Right now there are some manual tasks:
+Generate customization files:
 
-- Copy file `lib/req_res_stat_controller.rb` from gem to `app/controllers/req_res_stat_controller.rb` within Rails app.
-- Copy file `lib/request_response_stats_config.rb` from gem to `config/initializers/request_response_stat_config.rb` within Rails app
-- Copy file `lib/tasks/move_req_res_cycle_data_from_redis_to_mongo.rake` from gem to `lib/tasks/move_req_res_cycle_data_from_redis_to_mongo.rake` within Rails app.
-
-TODO: Write rake task for this.
+```ruby
+$ rails g request_response_stats:customization
+```
 
 Configure `config/initializers/request_response_stat_config.rb` as per your requirement.
 
