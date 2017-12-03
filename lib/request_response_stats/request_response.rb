@@ -50,7 +50,7 @@ module RequestResponseStats
         server_name: (request.env["SERVER_NAME"] rescue "some_server_name"),
         req_path: (request.path rescue "some_path"),
         req_http_verb: (request.method rescue "some_method"),
-        req_time: current_time,
+        req_time: current_time,  # implicit convertion to integer
         req_url: (request.url rescue "some_url"),
         req_format: (request.parameters["format"] rescue "some_format"),
         req_controller: (request.parameters["controller"] rescue "some_controller"),
