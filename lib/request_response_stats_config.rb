@@ -30,6 +30,11 @@ end
 #   end
 # end
 
+
+# Note: Below block is commented out with `=begin` and `=end`
+# You can uncomment the clients that are used in your application
+
+=begin
 # Configure popular REST and SOAP libraries
 # Client libraries
 require 'rest-client'
@@ -62,3 +67,4 @@ module Savon
     end
   end
 end
+=end
