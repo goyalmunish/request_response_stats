@@ -4,7 +4,7 @@
 
 - [RequestResponseStats](#requestresponsestats)
   - [Prerequisites](#prerequisites)
-  - [Installation](#installation)
+  - [Installation and Setup](#installation-and-setup)
   - [Usage](#usage)
     - [Documentation References](#documentation-references)
     - [Checking current data in redis](#checking-current-data-in-redis)
@@ -24,9 +24,9 @@
 
 The gem uses [Redis](https://github.com/redis/redis-rb) as a temporary storage to store the captured stats data. For permanent storage of this data, [MongoDB](https://github.com/mongodb/mongoid) is being used.
 
-You can pass your redis connection (by default, it is assumed to be available through `$redis`) and mongoid_doc_model (by default, it is named `ReqResStat`) thorugh `RequestResponseStats::RequestResponse.new`.
+You can pass your redis connection (by default, it is assumed to be available through `$redis`) and mongoid_doc_model (by default, it is named `ReqResStat`) through `RequestResponseStats::RequestResponse.new`.
 
-## Installation
+## Installation and Setup
 
 Add gem to your application's Gemfile:
 
@@ -46,7 +46,7 @@ Or install it separately as:
 $ gem install request_response_stats
 ```
 
-Add following to the controller whose request response stats are to be captured. For example,
+Include `RequestResponseStats::ControllerConcern` to the controller whose request response stats are to be captured. For example,
 
 ```ruby
 class ApplicationController < ActionController::Base
@@ -212,16 +212,15 @@ rrs.redis_record.hashify_all_data["api_req_res_PUBLIC_Munishs-MacBook-Pro.local_
                  "oldmalloc_increase_bytes_limit" => 0
     }
 }
-=> nil
 ```
 
 The gem uses [free](https://linux.die.net/man/1/free) command to capture memory information of the server. If this command is not available (such as on Mac), then zeros are reported, as you can see in memory keys (keys ending with `memory_MB`) in the above example.
 
-The last part of the key (such as `0202` in the above key) represents slot within a day. By default, `GROUP_STATS_BY_TIME_DURATION` is set as `1.minute`, so there are `24*60` slots in a day. You can easily configure these settings by overriding these configuration in`request_response_stats_config.rb`.
+The last part of the key (such as `0202` in the above key) represents slot within a day. By default, `GROUP_STATS_BY_TIME_DURATION` is set as `1.minute`, so there are `24*60` slots in a day. You can easily configure these settings by overriding these configurations in`request_response_stats_config.rb`.
 
 The `request_count` key, within data of a single key, gives the number of requests received for a given endpoint in a given timeslot.
 
-For example,
+For example, consider the key `"api_req_res_PUBLIC_Munishs-MacBook-Pro.local_/words/1/ajax_promote_flag_GET_2017-12-03-0202"`:
 
 ```ruby
 rrs.redis_record.get_slot_range_for_key "api_req_res_PUBLIC_Munishs-MacBook-Pro.local_/words/1/ajax_promote_flag_GET_2017-12-03-0202"
@@ -236,11 +235,10 @@ This means that the server `Munishs-MacBook-Pro.local` received `3` (as reported
 
 ### Manually moving data from Redis to Mongo
 
-Moving freezed, non-support keys from Redis to Mongo:
+Moving only request_response_stats specific, freezed, non-support (that is `{support: false}`) keys from Redis to Mongo:
 
 ```ruby
-rrs.move_data_from_redis_to_mongo
-# => 16
+rrs.move_data_from_redis_to_mongo  # => 16
 ```
 
 Note: Make use of `lib/tasks/move_req_res_cycle_data_from_redis_to_mongo.rake` to schedule this task using cron.
