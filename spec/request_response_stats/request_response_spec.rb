@@ -5,6 +5,11 @@ require_relative '../../lib/request_response_stats/dummy_response'
 RSpec.describe RequestResponseStats::RequestResponse do
   subject { RequestResponseStats::RequestResponse }
 
+  before(:each) do
+    allow_any_instance_of(Kernel).to receive(:`).with("free -ml").and_return(nil)
+    allow_any_instance_of(Kernel).to receive(:`).with("hostname").and_return("Munishs-MacBook-Pro")
+  end
+
   it "defines LONGEST_REQ_RES_CYCLE as an ActiveSupport::Duration" do
     expect(subject::LONGEST_REQ_RES_CYCLE).not_to be nil
     expect(subject::LONGEST_REQ_RES_CYCLE).to be_a_kind_of(ActiveSupport::Duration)
@@ -94,7 +99,7 @@ RSpec.describe RequestResponseStats::RequestResponse do
     end
 
     it "these keys are present: #{@must_present_keys_in_value.try(:join, ",")}" do
-      puts "Must present keys in value: #{@must_present_keys_in_value.join(",")}"
+      puts "Must be present keys in value: #{@must_present_keys_in_value.join(",")}"
       key_pattern = /^api_req_res_SUPPORT.*REQ_OBJ.*/
       value_pattern = /#{@must_present_keys_in_value.join(".*")}/
       allow(@redis_record).to receive(:set).with(a_string_matching(key_pattern), a_string_matching(value_pattern), kind_of(Hash))
@@ -103,7 +108,7 @@ RSpec.describe RequestResponseStats::RequestResponse do
     end
 
     it "these values are present: #{@must_present_values_in_value.try(:join, ",")}" do
-      puts "Must present values in value: #{@must_present_values_in_value.join(",")}"
+      puts "Must be present values in value: #{@must_present_values_in_value.join(",")}"
       key_pattern = /^api_req_res_SUPPORT.*REQ_OBJ.*/
       value_pattern = /#{@must_present_values_in_value.join(".*")}/
       allow(@redis_record).to receive(:set).with(a_string_matching(key_pattern), a_string_matching(value_pattern), kind_of(Hash))
@@ -199,7 +204,7 @@ RSpec.describe RequestResponseStats::RequestResponse do
       # when this key doesn't exist already
       allow(@redis_record).to receive(:get).with(a_string_matching(get_set_res_key_pattern)).and_return("{}")
       must_present_keys_in_value = %w(key_name server_name api_name api_verb api_controller api_action request_count min_time max_time avg_time start_time end_time error_count min_used_memory_MB max_used_memory_MB avg_used_memory_MB min_swap_memory_MB max_swap_memory_MB avg_swap_memory_MB avg_gc_stat_diff min_gc_stat_diff max_gc_stat_diff)
-      puts "Must present keys in value: #{must_present_keys_in_value.join(",")}"
+      puts "Must be present keys in value: #{must_present_keys_in_value.join(",")}"
       value_pattern = /#{must_present_keys_in_value.join(".*")}/
       expect(@redis_record).to receive(:set).with(a_string_matching(get_set_res_key_pattern), a_string_matching(value_pattern), kind_of(Hash)).and_return("OK")
       key_name = @rrs.capture_request_response_cycle_end_info
@@ -223,7 +228,7 @@ RSpec.describe RequestResponseStats::RequestResponse do
       # when this key doesn't exist already
       allow(@redis_record).to receive(:get).with(a_string_matching(get_set_res_key_pattern)).and_return("{}")
       must_present_values_in_value = %w(fake_path fake_http_verb fake_controller fake_action)
-      puts "Must present values in value: #{must_present_values_in_value.join(",")}"
+      puts "Must be present values in value: #{must_present_values_in_value.join(",")}"
       value_pattern = /#{must_present_values_in_value.join(".*")}/
       expect(@redis_record).to receive(:set).with(a_string_matching(get_set_res_key_pattern), a_string_matching(value_pattern), kind_of(Hash)).and_return("OK")
       key_name = @rrs.capture_request_response_cycle_end_info
@@ -255,8 +260,53 @@ RSpec.describe RequestResponseStats::RequestResponse do
   end
 
   context "#capture_request_response_cycle_error_info" do
+    it "calls capture_request_response_cycle_end_info with {capture_error: true}" do
+      @redis_record = double("redis_record")
+      @rrs = subject.new(
+        RequestResponseStats::DummyRequest.new({method: "some_method_name", path: "some_dummy_url"}),
+        RequestResponseStats::DummyResponse.new,
+        {redis_connection: @redis_record, gather_stats: true}
+      )
+      @current_time = Time.now
+      allow_any_instance_of(subject).to receive(:capture_request_response_cycle_end_info).with({capture_error: true}).and_return("success")
+      expect(@rrs.capture_request_response_cycle_error_info).to eq("success")
+    end
   end
 
   context "#move_data_from_redis_to_mongo" do
+    before(:each) do
+      redis_record = double("redis_record")
+      mongoid_doc_model = double("mongoid_doc_model")
+      @rrs = subject.new(
+        RequestResponseStats::DummyRequest.new({method: "some_method_name", path: "some_dummy_url"}),
+        RequestResponseStats::DummyResponse.new,
+        {redis_connection: redis_record, mongoid_doc_model: mongoid_doc_model, gather_stats: true}
+      )
+      allow(redis_record).to receive(:keys).and_return(
+        "api_req_res_PUBLIC_key1",
+        "api_req_res_key2",
+        "key3",
+        "key4_api_req_res",
+        "api_req_res_PUBLIC_key5",
+        "api_req_res_PUBLIC_key6",
+        "some_key7"
+      )
+      allow(RequestResponseStats::RedisRecord).to receive(:formatted_parsed_get_for_mongo).with("api_req_res_PUBLIC_key1").and_return("key1_value")
+      allow(RequestResponseStats::RedisRecord).to receive(:formatted_parsed_get_for_mongo).with("api_req_res_PUBLIC_key5").and_return("key5_value")
+      allow(RequestResponseStats::RedisRecord).to receive(:formatted_parsed_get_for_mongo).with("api_req_res_PUBLIC_key6").and_return("key6_value")
+      allow(RequestResponseStats::RedisRecord).to receive(:freezed_keys).with(no_args).and_return(["api_req_res_PUBLIC_key1", "api_req_res_PUBLIC_key5"])
+      expect(@rrs.mongoid_doc_model).to receive(:create).with(any_args).and_return("success").exactly(2).times
+      expect(@rrs.redis_record).to receive(:del).with("api_req_res_PUBLIC_key1").and_return("success")
+      expect(@rrs.redis_record).to receive(:del).with("api_req_res_PUBLIC_key5").and_return("success")
+    end
+
+    it %Q(
+    moves only request-response PUBLIC keys
+    moves only freezed keys
+    uses value as formatted by RedisRecord.formatted_parsed_get_for_mongo to feed mongo
+    deletes the moved key from redis
+    ) do
+      expect(@rrs.move_data_from_redis_to_mongo).to eq(2)
+    end
   end
 end
