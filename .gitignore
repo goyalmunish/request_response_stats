@@ -13,4 +13,5 @@
 
 **/.DS_Store
 **/*.swp
+**/*.swo
 .byebug_history

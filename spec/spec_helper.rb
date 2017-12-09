@@ -1,3 +1,12 @@
+# Configuration for codecov
+# Refer: https://github.com/codecov/example-ruby
+require 'simplecov'
+SimpleCov.start
+
+require 'codecov'
+SimpleCov.formatter = SimpleCov::Formatter::Codecov
+
+# Basic configuration
 require "bundler/setup"
 require "request_response_stats"
 

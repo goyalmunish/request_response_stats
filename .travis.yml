@@ -3,3 +3,9 @@ language: ruby
 rvm:
   - 2.4.1
 before_install: gem install bundler -v 1.15.4
+services:
+  - redis-server
+  - mongodb
+before_script:
+  - sleep 15
+  - mongo mydb_test --eval 'db.createUser({user:"travis",pwd:"test",roles:["readWrite"]});'

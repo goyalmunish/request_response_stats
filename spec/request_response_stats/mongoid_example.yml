@@ -1,6 +1,6 @@
 development:
   clients:
     default:
-      database: mongoid
+      database: mydb_test
       hosts:
         - localhost:27017

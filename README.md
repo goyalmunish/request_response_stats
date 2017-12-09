@@ -20,6 +20,12 @@
 
 # RequestResponseStats
 
+[![Gem Version](https://badge.fury.io/rb/request_response_stats.svg)](https://badge.fury.io/rb/request_response_stats)
+[![Build Status](https://travis-ci.org/goyalmunish/request_response_stats.svg?branch=master)](https://travis-ci.org/goyalmunish/request_response_stats)
+[![codecov](https://codecov.io/gh/goyalmunish/request_response_stats/branch/master/graph/badge.svg)](https://codecov.io/gh/goyalmunish/request_response_stats)
+[![Maintainability](https://api.codeclimate.com/v1/badges/0c231c47679470213426/maintainability)](https://codeclimate.com/github/goyalmunish/request_response_stats/maintainability)
+[![Inline docs](http://inch-ci.org/github/goyalmunish/request_response_stats.svg?branch=master)](http://inch-ci.org/github/goyalmunish/request_response_stats)
+
 ## Prerequisites
 
 The gem uses [Redis](https://github.com/redis/redis-rb) as a temporary storage to store the captured stats data. For permanent storage of this data, [MongoDB](https://github.com/mongodb/mongoid) is being used.

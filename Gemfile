@@ -4,3 +4,5 @@ git_source(:github) {|repo_name| "https://github.com/#{repo_name}" }
 
 # Specify your gem's dependencies in request_response_stats.gemspec
 gemspec
+
+gem 'codecov', :require => false, :group => :test
