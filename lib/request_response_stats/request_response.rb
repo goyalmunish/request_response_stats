@@ -37,6 +37,7 @@ module RequestResponseStats
     end
 
     # captures request info that will be used at the end of request-response cycle
+    # note that the captured infomation is saved only temporarily
     def capture_request_response_cycle_start_info
       return gather_stats unless gather_stats
 
@@ -156,11 +157,13 @@ module RequestResponseStats
     end
 
     # captures error info
+    # it is called if an exception is raised, and it in turns calls capture_request_response_cycle_end_info with capture_error: true
     def capture_request_response_cycle_error_info
       capture_request_response_cycle_end_info(capture_error: true)
     end
 
     # moves data from redis to mongo
+    # only freezed and PUBLIC keys are moved
     def move_data_from_redis_to_mongo
       moved_keys = redis_record.freezed_keys.select do |redis_key|
         value = redis_record.formatted_parsed_get_for_mongo(redis_key)
@@ -174,10 +177,13 @@ module RequestResponseStats
 
     private
 
+    # returns current time
     def get_system_current_time
       Time.now.to_f.round(SECONDS_PRECISION)
     end
 
+    # returns current system memory
+    # it uses `free` command to capture system memory info
     def get_system_memory_info_mb
       key_name = redis_record.support_key(get_server_hostname, [get_server_hostname, "memory"].join("_"))
       value = ActiveSupport::HashWithIndifferentAccess.new(redis_record.parsed_get key_name)
@@ -195,6 +201,7 @@ module RequestResponseStats
       return_value
     end
 
+    # returns the difference (new - old) in gc_stat
     def get_gc_stat_diff(old_gc_stat, new_gc_stat)
       stat_diff = {}
       gc_keys = new_gc_stat.keys.map{ |k| k.to_s.to_sym }
@@ -236,16 +243,22 @@ module RequestResponseStats
       stat
     end
 
+    # returns system used memory
+    # uses `get_system_memory_info` to get the info
     def get_system_used_memory_mb
       # (`free -ml | grep 'Mem:' | awk -F' ' '{ print $3 }'`.strip.to_i rescue 0).round(MEMORY_PRECISION)
       get_system_memory_info_mb[:used_memory]
     end
 
+    # returns used swap memory
+    # uses `get_system_memory_info` to get the info
     def get_system_used_swap_memory_mb
       # (`free -ml | grep 'Swap:' | awk -F' ' '{ print $3 }'`.strip.to_i rescue 0).round(MEMORY_PRECISION)
       get_system_memory_info_mb[:used_swap_memory]
     end
 
+    # returns system hostname
+    # uses linux `hostname` command to get the info
     def get_server_hostname
       (`hostname`).strip
     end

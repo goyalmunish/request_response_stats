@@ -5,7 +5,6 @@ require 'mongoid'
 
 class RequestResponseStats::ReqResStat
   include Mongoid::Document
-  # include Mongoid::Timestamps
 
   store_in collection: "statsReqRes"
 
@@ -35,6 +34,7 @@ class RequestResponseStats::ReqResStat
   DEFAULT_STATS_GRANULARITY = 1.hour
   PERCISION = 2
 
+  # returns a string identifying server_name, api_name, and api_verb
   def server_plus_api
     [server_name, api_name, api_verb].join("_")
   end
@@ -48,21 +48,25 @@ class RequestResponseStats::ReqResStat
     end
 
     # wrapper around `get_stat` for :sum stat
+    # for more info, check documentation for `get_stat`
     def get_sum(key, start_time, end_time, granularity = DEFAULT_STATS_GRANULARITY)
       get_stat("sum", key, start_time, end_time, granularity)
     end
 
     # wrapper around `get_stat` for :min stat
+    # for more info, check documentation for `get_stat`
     def get_min(key, start_time, end_time, granularity = DEFAULT_STATS_GRANULARITY)
       get_stat("min", key, start_time, end_time, granularity)
     end
 
     # wrapper around `get_stat` for :max stat
+    # for more info, check documentation for `get_stat`
     def get_max(key, start_time, end_time, granularity = DEFAULT_STATS_GRANULARITY)
       get_stat("max", key, start_time, end_time, granularity)
     end
 
     # wrapper around `get_stat` for :avg stat
+    # for more info, check documentation for `get_stat`
     def get_avg(key, start_time, end_time, granularity = DEFAULT_STATS_GRANULARITY)
       data = get_stat("sum", key, start_time, end_time, granularity)
       data.each do |e|
@@ -77,6 +81,8 @@ class RequestResponseStats::ReqResStat
       data
     end
 
+    # instead of aggregated values (such as in `get_stat`), it returns grouped values for given key, given granularity level,
+    # and given start_time and end_time
     # set `stat_type` as `nil` to return grouped but uncompacted data
     # otherwise, you can set `stat_type` as :sum, :max, :min, :avg to get grouped data
     def get_details(key, start_time, end_time, stat_type = nil, granularity = DEFAULT_STATS_GRANULARITY)
@@ -149,6 +155,7 @@ class RequestResponseStats::ReqResStat
       time_ranges
     end
 
+    # it returns aggreated values for given key for given granularity in between given start_time and end_time
     # stat: ["sum", "min", "max"]
     # Note that [].sum is 0, whereas, [].min and [].max is nil
     def get_stat(stat_type, key, start_time, end_time, granularity = DEFAULT_STATS_GRANULARITY)

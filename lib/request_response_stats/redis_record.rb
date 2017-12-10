@@ -45,27 +45,33 @@ module RequestResponseStats
     }.stringify_keys
 
     class << self
-      # it returns the redis connection
+
+      # returns the redis connection
       # this method must be redefined for `RedisRecord` to be useable
       def redis
         raise StandardError, "UNDEFINED #{__method__}"
       end
 
       # get value from redis
+      # wrapper from redis' `get` method
       def get(key)
         redis.get(key)
       end
 
       # set value to redis
+      # wrapper from redis' `set` method
       def set(key, value, options={})
         redis.set(key, value, options)
       end
 
       # delete value from redis
+      # wrapper from redis' `del` method
       def del(key)
         redis.del(key)
       end
 
+      # returns all request_response_stats relevant redis keys
+      # by default only PUBLIC keys are returned
       def all_keys(opts={})
         support = opts[:support] || false
         if support
@@ -91,6 +97,7 @@ module RequestResponseStats
         data
       end
 
+      # returns collection of all relevant PUBLIC request_response_stats data from redis
       def hashify_all_data(opts={})
         support = opts[:support] || false
         req_res_stat = ActiveSupport::HashWithIndifferentAccess.new
@@ -101,10 +108,12 @@ module RequestResponseStats
         req_res_stat
       end
 
+      # flushes all request_response_stats data from redis
       def flush_all_keys
         redis.del(*all_keys(support: true)) if all_keys.present?
       end
 
+      # it has to be overridden
       def group_stats_by_time_duration
         raise StandardError, "UNDEFINED #{__method__}"
       end
@@ -148,6 +157,9 @@ module RequestResponseStats
         alerts_data
       end
 
+      # returns all PUBLIC request_response_stats related freezed keys from redis
+      # freezed key: redis key which will no longer be updated
+      # only freezed keys are eligible to be moved to mongo
       def freezed_keys
         all_keys.map{|k| self.new(k)}.select{|k| k.is_key_freezed?}.map{|rr| rr.key}
       end

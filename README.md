@@ -73,9 +73,9 @@ Configure `config/initializers/request_response_stat_config.rb` as per your requ
 
 ### Documentation References
 
-Refer: http://www.rubydoc.info/gems/request_response_stats/
+Reference to Ruby docs: http://www.rubydoc.info/gems/request_response_stats/
 
-But, you can get better documentation by running tests :wink:.
+But, you can get better documentation by running tests :wink:. Refer: https://travis-ci.org/goyalmunish/request_response_stats.
 
 ### Checking current data in redis
 
