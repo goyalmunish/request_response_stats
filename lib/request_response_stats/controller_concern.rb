@@ -17,7 +17,11 @@ module RequestResponseStats
             begin
               rrs = RequestResponse.new(request, response, {redis_connection: $redis, gather_stats: true, mongoid_doc_model: ReqResStat})
               rrs.capture_request_response_cycle_start_info
-              yield
+              if block_given?
+                yield
+              else
+                raise StandardError, "No block received. Investigate!"
+              end
               rrs.capture_request_response_cycle_end_info
             rescue Exception => ex
               rrs.try(:capture_request_response_cycle_error_info)
