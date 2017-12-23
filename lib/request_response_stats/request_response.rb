@@ -164,15 +164,32 @@ module RequestResponseStats
 
     # moves data from redis to mongo
     # only freezed and PUBLIC keys are moved
-    def move_data_from_redis_to_mongo
-      moved_keys = redis_record.freezed_keys.select do |redis_key|
-        value = redis_record.formatted_parsed_get_for_mongo(redis_key)
-        mongo_doc = mongoid_doc_model.create(value)
-        redis_record.del redis_key if mongo_doc
-        mongo_doc
-      end
+    def move_data_from_redis_to_mongo(at_once=true)
+      if at_once
+        # multiple records will be inserted to mongodb at once
+        # this is to minimize the index creation time
+        values = []
+        redis_keys = []
+        redis_record.freezed_keys.each do |redis_key|
+          values << redis_record.formatted_parsed_get_for_mongo(redis_key)
+          redis_keys << redis_key
+        end
+        mongoid_doc_model.create(values)
+        redis_record.del(*redis_keys) if redis_keys.size > 0
 
-      moved_keys.size
+        redis_keys.size
+      else
+        # records will be inserted to mongo one at a time
+        # corresponding key from redis will be deleted only after successful creation of mongodb record
+        moved_keys = redis_record.freezed_keys.select do |redis_key|
+          value = redis_record.formatted_parsed_get_for_mongo(redis_key)
+          mongo_doc = mongoid_doc_model.create(value)
+          redis_record.del redis_key if mongo_doc
+          mongo_doc
+        end
+
+        moved_keys.size
+      end
     end
 
     private

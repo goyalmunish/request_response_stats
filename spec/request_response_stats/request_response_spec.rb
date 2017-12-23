@@ -295,17 +295,38 @@ RSpec.describe RequestResponseStats::RequestResponse do
       allow(RequestResponseStats::RedisRecord).to receive(:formatted_parsed_get_for_mongo).with("api_req_res_PUBLIC_key5").and_return("key5_value")
       allow(RequestResponseStats::RedisRecord).to receive(:formatted_parsed_get_for_mongo).with("api_req_res_PUBLIC_key6").and_return("key6_value")
       allow(RequestResponseStats::RedisRecord).to receive(:freezed_keys).with(no_args).and_return(["api_req_res_PUBLIC_key1", "api_req_res_PUBLIC_key5"])
-      expect(@rrs.mongoid_doc_model).to receive(:create).with(any_args).and_return("success").exactly(2).times
-      expect(@rrs.redis_record).to receive(:del).with("api_req_res_PUBLIC_key1").and_return("success")
-      expect(@rrs.redis_record).to receive(:del).with("api_req_res_PUBLIC_key5").and_return("success")
     end
 
     it %Q(
-    moves only request-response PUBLIC keys
-    moves only freezed keys
-    uses value as formatted by RedisRecord.formatted_parsed_get_for_mongo to feed mongo
-    deletes the moved key from redis
+    if at_once=false
+      moves only request-response PUBLIC keys (one by one)
+      moves only freezed keys
+      uses value as formatted by RedisRecord.formatted_parsed_get_for_mongo to feed mongo
+      deletes the moved key from redis
     ) do
+      expect(@rrs.mongoid_doc_model).to receive(:create).with(any_args).and_return("success").exactly(2).times
+      expect(@rrs.redis_record).to receive(:del).with("api_req_res_PUBLIC_key1").and_return("success")
+      expect(@rrs.redis_record).to receive(:del).with("api_req_res_PUBLIC_key5").and_return("success")
+      expect(@rrs.move_data_from_redis_to_mongo(false)).to eq(2)
+    end
+
+    it %Q(
+    if at_once=true
+      moves only request-response PUBLIC keys (all at once)
+      moves only freezed keys
+      uses value as formatted by RedisRecord.formatted_parsed_get_for_mongo to feed mongo
+      deletes the moved key from redis
+    ) do
+      expect(@rrs.mongoid_doc_model).to receive(:create).with(any_args).and_return("success").exactly(1).times
+      expect(@rrs.redis_record).to receive(:del).with("api_req_res_PUBLIC_key1", "api_req_res_PUBLIC_key5").and_return("success")
+      expect(@rrs.move_data_from_redis_to_mongo(true)).to eq(2)
+    end
+
+    it %Q(
+    if at_once is not set, it is assumed to be `false` by default
+    ) do
+      expect(@rrs.mongoid_doc_model).to receive(:create).with(any_args).and_return("success").exactly(1).times
+      expect(@rrs.redis_record).to receive(:del).with("api_req_res_PUBLIC_key1", "api_req_res_PUBLIC_key5").and_return("success")
       expect(@rrs.move_data_from_redis_to_mongo).to eq(2)
     end
   end
