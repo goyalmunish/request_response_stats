@@ -8,6 +8,7 @@ class RequestResponseStats::ReqResStat
 
   store_in collection: "statsReqRes"
 
+  # defining fields
   field :key_name, type: String
   field :server_name, type: String
   field :api_name, type: String
@@ -31,6 +32,17 @@ class RequestResponseStats::ReqResStat
   field :min_gc_stat_diff, type: Hash
   field :max_gc_stat_diff, type: Hash
 
+  # defining indexes
+  index({key_name: 1}, {unique: true, background: true})  # note that this is unique index
+  index({start_time: -1, end_time: -1}, {unique: false, background: true})
+  index({api_name: 1}, {unique: false, background: true})
+  index({server_name: 1}, {unique: false, background: true})
+  index({request_count: 1}, {unique: false, background: true})
+  index({error_count: 1}, {unique: false, background: true})
+  index({max_time: 1}, {unique: false, background: true})
+  index({avg_time: 1}, {unique: false, background: true})
+  index({min_time: 1}, {unique: false, background: true})
+
   DEFAULT_STATS_GRANULARITY = 1.hour
   PERCISION = 2
 
@@ -43,8 +55,14 @@ class RequestResponseStats::ReqResStat
     # Note:
     # `start_time` and `end_time` are Time objects
     # `start_time` in inclusive but `end_time` is not
+    # Use `get_within` with `nil` values for `start_time` and `end_time` to minimize database hits
+    # for same kind of queries on same date-range of data
     def get_within(start_time, end_time)
-      where(:start_time.gte => start_time, :end_time.lt => end_time)
+      if start_time || end_time
+        where(:start_time.gte => start_time, :end_time.lt => end_time)
+      else
+        all
+      end
     end
 
     # wrapper around `get_stat` for :sum stat
@@ -85,6 +103,9 @@ class RequestResponseStats::ReqResStat
     # and given start_time and end_time
     # set `stat_type` as `nil` to return grouped but uncompacted data
     # otherwise, you can set `stat_type` as :sum, :max, :min, :avg to get grouped data
+    # TODO: Ignore `start_time` and `end_time` if a time-based collection is passed
+    # TODO: Optimize `get_time_ranges` to not to calculate time_ranges again and again for same `start_time` and `end_time` (that is,
+    # for same time-based collection
     def get_details(key, start_time, end_time, stat_type = nil, granularity = DEFAULT_STATS_GRANULARITY)
       # get ungrouped data
       stat_type = stat_type.to_s.to_sym if stat_type

@@ -154,6 +154,9 @@ RSpec.describe RequestResponseStats::ReqResStat do
       expect(subject.get_within(@time, @time + 62.minute).size).to eq(2)
       expect(subject.get_within(@time, @time + 122.hours).size).to eq(3)
     end
+    it "ignores :start_time (first arg) and :end_time (second arg) if both are nil, and returns the same collection" do
+      expect(subject.get_within(nil, nil).size).to eq(3)
+    end
   end
 
   context ".get_sum" do
